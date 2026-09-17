@@ -22,6 +22,7 @@ import {
   ReviewsSection,
   WhyUs,
 } from "@/components/sections";
+import { AnimatedWords } from "@/components/animated-words";
 import { photos } from "@/lib/menu";
 const pages: Record<
   string,
@@ -121,9 +122,14 @@ export default async function ContentPage({
           <Reveal>
             <Eyebrow>{data.eyebrow}</Eyebrow>
             <h1>
-              {data.heading}
+              <AnimatedWords text={data.heading} />
               <br />
-              <span>{data.accent}</span>
+              <span>
+                <AnimatedWords
+                  text={data.accent}
+                  offset={data.heading.split(" ").length}
+                />
+              </span>
             </h1>
             <p>{data.description}</p>
           </Reveal>

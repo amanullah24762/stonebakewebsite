@@ -1,10 +1,11 @@
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import assert from "node:assert/strict";
+const baseURL = process.env.TEST_BASE_URL || "http://127.0.0.1:3000";
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 const errors = [];
 page.on("pageerror", (error) => errors.push(error.message));
-await page.goto("http://127.0.0.1:3000", { waitUntil: "networkidle" });
+await page.goto(baseURL, { waitUntil: "networkidle" });
 await page.screenshot({ path: "/tmp/stone-bake-desktop.png", fullPage: true });
 for (const route of [
   "menu",
@@ -15,7 +16,7 @@ for (const route of [
   "contact",
   "order",
 ]) {
-  const response = await page.goto(`http://127.0.0.1:3000/${route}`, {
+  const response = await page.goto(`${baseURL}/${route}`, {
     waitUntil: "networkidle",
   });
   assert.equal(response.status(), 200, route);
@@ -25,12 +26,12 @@ for (const route of [
     `${route} must have one h1`,
   );
 }
-await page.goto("http://127.0.0.1:3000/menu");
+await page.goto(`${baseURL}/menu`);
 await page.getByRole("button", { name: "Burgers", exact: true }).click();
-assert.equal(await page.locator(".food-card").count(), 3);
+await expect(page.locator(".food-card")).toHaveCount(3);
 await page.getByRole("button", { name: "All favorites", exact: true }).click();
 await page.getByRole("searchbox").fill("tikka");
-assert.equal(await page.locator(".food-card").count(), 1);
+await expect(page.locator(".food-card")).toHaveCount(1);
 await page
   .getByRole("button", { name: "Add Chicken Tikka Pizza to order" })
   .first()
@@ -62,7 +63,7 @@ assert.ok(message.includes("Dina test address"));
 assert.ok(message.includes("Rs. 2,398"));
 await page.keyboard.press("Escape");
 await page.setViewportSize({ width: 390, height: 844 });
-await page.goto("http://127.0.0.1:3000", { waitUntil: "networkidle" });
+await page.goto(baseURL, { waitUntil: "networkidle" });
 await page.screenshot({ path: "/tmp/stone-bake-mobile.png", fullPage: true });
 assert.equal(
   await page.evaluate(
@@ -81,12 +82,11 @@ assert.equal(
   await page.getByRole("navigation", { name: "Mobile navigation" }).count(),
   0,
 );
-await page.goto("http://127.0.0.1:3000/menu?category=Burgers");
-assert.equal(
-  await page.locator(".food-card").count(),
-  3,
+await page.goto(`${baseURL}/menu?category=Burgers`);
+await expect(
+  page.locator(".food-card"),
   "Deep-link category filtering",
-);
+).toHaveCount(3);
 assert.deepEqual(errors, [], "No browser runtime errors");
 await browser.close();
 console.log(

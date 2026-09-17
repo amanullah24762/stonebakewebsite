@@ -37,7 +37,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body className={`${poppins.variable} ${inter.variable}`}>
+      {/* Grammarly can add body attributes before hydration; keep suppression local. */}
+      <body
+        className={`${poppins.variable} ${inter.variable}`}
+        suppressHydrationWarning
+      >
         <a className="skip-link" href="#main">
           Skip to content
         </a>

@@ -364,7 +364,7 @@ button:focus-visible {
   display: inline-block;
   position: relative;
 }
-.hero h1 span:after {
+.hero h1 .hero-accent:after {
   content: "";
   position: absolute;
   height: 7px;
@@ -2101,5 +2101,289 @@ textarea::placeholder {
   .reveal,
   .cart-panel {
     transform: none !important;
+  }
+}
+
+/* Keep server-rendered content visible; animate only after entering the viewport. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes count-pop {
+  50% {
+    transform: scale(1.25);
+  }
+}
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(12deg) scale(1);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reveal.is-revealed {
+    animation: rise-in 550ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .food-grid > .reveal:nth-child(4n + 2),
+  .gallery-grid > .reveal:nth-child(2n) {
+    animation-delay: 60ms;
+  }
+  .food-grid > .reveal:nth-child(4n + 3) {
+    animation-delay: 120ms;
+  }
+  .food-grid > .reveal:nth-child(4n + 4) {
+    animation-delay: 180ms;
+  }
+  .hero-copy.is-revealed {
+    animation: none;
+  }
+  .hero-copy > * {
+    animation: rise-in 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero-copy > h1 {
+    animation: none;
+  }
+  .hero-copy > p {
+    animation-delay: 120ms;
+  }
+  .hero-copy > .hero-buttons {
+    animation-delay: 180ms;
+  }
+  .hero-copy > .hero-note {
+    animation-delay: 240ms;
+  }
+  .hero-stamp {
+    animation: stamp-in 750ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .cart-panel {
+    animation: slide-in 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .cart-backdrop {
+    animation: fade-in 180ms ease-out;
+  }
+  .mobile-nav,
+  .checkout-form {
+    animation: rise-in 220ms ease-out;
+  }
+  .cart-count {
+    animation: count-pop 250ms ease-out;
+  }
+  .button:active,
+  .quick-add:active {
+    transform: scale(0.96);
+  }
+  .button > svg {
+    transition: transform 180ms ease-out;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .button:hover > svg {
+    transform: translateX(3px);
+  }
+  .quick-add:hover {
+    transform: rotate(90deg);
+  }
+  .floating-whatsapp:hover {
+    transform: translateY(-4px) scale(1.05);
+  }
+}
+
+/* Reference-inspired word reveals, drifting details, and a seamless flavor ribbon. */
+h1 .motion-word {
+  color: inherit;
+  display: inline-block;
+}
+.flavor-marquee {
+  position: relative;
+  overflow: hidden;
+  background: #171716;
+  border-bottom: 1px solid var(--line);
+  color: #c8c2b8;
+  padding-block: 24px;
+}
+.flavor-track {
+  display: flex;
+  width: max-content;
+}
+.flavor-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 38px;
+  padding-right: 38px;
+  min-width: 100vw;
+  flex-shrink: 0;
+  font-size: 10px;
+  letter-spacing: 0.2px;
+}
+.flavor-group > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+}
+.flavor-group svg {
+  width: 16px;
+  height: 16px;
+  color: var(--orange);
+}
+.flavor-group i {
+  color: var(--orange);
+  font-style: normal;
+}
+.marquee-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background: #242421;
+  border: 1px solid #ffffff25;
+  border-radius: 50%;
+}
+@keyframes word-reveal {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+@keyframes flavor-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes detail-float {
+  from {
+    translate: 0 -5px;
+  }
+  to {
+    translate: 0 5px;
+  }
+}
+@keyframes photo-settle {
+  from {
+    transform: scale(1.075);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-pending {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  .reveal-pending:focus-within {
+    opacity: 1;
+    transform: none;
+  }
+  .motion-word {
+    animation: word-reveal 500ms ease-out var(--word-delay, 0ms) both;
+  }
+  .hero-photo {
+    animation: photo-settle 1400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero-stamp {
+    animation:
+      stamp-in 800ms ease-out both,
+      detail-float 3500ms ease-in-out 800ms 4 alternate;
+  }
+  .page-hero-flame {
+    animation: detail-float 4s ease-in-out 4 alternate;
+  }
+  .flavor-track {
+    animation: flavor-scroll 32s linear infinite;
+    animation-play-state: paused;
+  }
+  .flavor-marquee.is-in-view .flavor-track {
+    animation-play-state: running;
+  }
+  .flavor-marquee[data-paused="true"] .flavor-track,
+  .flavor-marquee:hover .flavor-track,
+  .flavor-marquee:focus-within .flavor-track {
+    animation-play-state: paused;
+  }
+  .button {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: #ffffff20;
+    transform: translateX(-105%);
+    transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .button:hover::before,
+  .button:focus-visible::before {
+    transform: translateX(0);
+  }
+}
+@media (max-width: 700px) {
+  .flavor-group {
+    gap: 24px;
+    padding-right: 24px;
+    font-size: 9px;
+  }
+  .flavor-marquee {
+    padding-block: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flavor-track {
+    width: 100%;
+  }
+  .flavor-group {
+    min-width: 0;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 0 24px;
+  }
+  .flavor-group[aria-hidden="true"],
+  .flavor-group i,
+  .marquee-toggle {
+    display: none;
+  }
+  .reveal-pending {
+    opacity: 1;
+    transform: none;
   }
 }

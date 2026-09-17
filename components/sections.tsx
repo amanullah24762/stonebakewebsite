@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -16,10 +15,12 @@ import {
   Star,
   UtensilsCrossed,
 } from "lucide-react";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { deals, menu, MenuItem, money, whatsapp } from "@/lib/menu";
 import { useCart } from "./site-shell";
+// One observer for all sections; disconnect each target after its first reveal.
+let revealObserver: IntersectionObserver | undefined;
 export function Reveal({
   children,
   className = "",
@@ -27,16 +28,38 @@ export function Reveal({
   children: React.ReactNode;
   className?: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (
+      !node ||
+      !("IntersectionObserver" in window) ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    revealObserver ??= new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.remove("reveal-pending");
+            entry.target.classList.add("is-revealed");
+            revealObserver?.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.08 },
+    );
+    // Arm only offscreen content so the first paint and no-JS content stay visible.
+    if (node.getBoundingClientRect().top > window.innerHeight) {
+      node.classList.add("reveal-pending");
+    }
+    revealObserver.observe(node);
+    return () => revealObserver?.unobserve(node);
+  }, []);
   return (
-    <motion.div
-      className={`reveal ${className}`}
-      initial={{ y: 22 }}
-      whileInView={{ y: 0 }}
-      viewport={{ once: true, amount: 0.12 }}
-      transition={{ duration: 0.55 }}
-    >
+    <div ref={ref} className={`reveal ${className}`}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 export function Eyebrow({ children }: { children: React.ReactNode }) {

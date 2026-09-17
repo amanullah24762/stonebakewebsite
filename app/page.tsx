@@ -4,7 +4,6 @@ import {
   ArrowDown,
   ArrowUpRight,
   Flame,
-  Leaf,
   MapPin,
   UtensilsCrossed,
 } from "lucide-react";
@@ -18,6 +17,8 @@ import {
   ReviewsSection,
   WhyUs,
 } from "@/components/sections";
+import { AnimatedWords } from "@/components/animated-words";
+import { FlavorMarquee } from "@/components/flavor-marquee";
 import { photos } from "@/lib/menu";
 export default function Home() {
   return (
@@ -37,11 +38,14 @@ export default function Home() {
           <Reveal className="hero-copy">
             <Eyebrow>FIRE. FLAVOR. A LITTLE OBSESSION.</Eyebrow>
             <h1>
-              Freshly Baked
+              <AnimatedWords text="Freshly Baked" />
               <br />
-              Pizza, Crafted
+              <AnimatedWords text="Pizza, Crafted" offset={2} />
               <br />
-              With <span>Passion.</span>
+              <AnimatedWords text="With" offset={4} />{" "}
+              <span className="hero-accent">
+                <AnimatedWords text="Passion." offset={5} />
+              </span>
             </h1>
             <p>
               Some things are worth doing the slow way.
@@ -84,23 +88,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <div className="promise-strip">
-        <div>
-          <Flame /> Stone-baked. Never ordinary.
-        </div>
-        <span>✦</span>
-        <div>
-          <Leaf /> Fresh ingredients, real flavor.
-        </div>
-        <span>✦</span>
-        <div>
-          <UtensilsCrossed /> Good food brings us together.
-        </div>
-        <span>✦</span>
-        <div>
-          Made with love in Dina <span className="orange">♥</span>
-        </div>
-      </div>
+      <FlavorMarquee />
       <MenuSection />
       <WhyUs />
       <OffersSection />
