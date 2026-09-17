@@ -285,9 +285,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <span>
             © {new Date().getFullYear()} Stone Bake Pizza. All rights reserved.
           </span>
-          <span>
-            Made with fire. Served with love. <Flame size={13} />
-          </span>
+          <span>Developed by Aman Ullah</span>
         </div>
       </footer>
       <a
