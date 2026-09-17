@@ -251,16 +251,6 @@ button:focus-visible {
 .desktop-nav a.active {
   color: var(--orange);
 }
-.desktop-nav a.active:after {
-  content: "";
-  position: absolute;
-  bottom: 21px;
-  left: 50%;
-  height: 3px;
-  width: 3px;
-  background: var(--orange);
-  border-radius: 50%;
-}
 .nav-actions {
   display: flex;
   align-items: center;
