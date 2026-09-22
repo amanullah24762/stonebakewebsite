@@ -17,8 +17,12 @@ import {
 } from "lucide-react";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { deals, menu, MenuItem, money, whatsapp } from "@/lib/menu";
+import { deals, MenuItem, money, whatsapp } from "@/lib/menu";
+import { getMenuItems, type PublicMenuItem } from "@/lib/api/menu";
 import { useCart } from "./site-shell";
+import { MenuItemDialog } from "./menu-item-dialog";
+import detailStyles from "./menu-item-dialog.module.css";
+import { getCategories, type PublicCategory } from "@/lib/api/categories";
 // One observer for all sections; disconnect each target after its first reveal.
 let revealObserver: IntersectionObserver | undefined;
 export function Reveal({
@@ -70,13 +74,22 @@ export function Eyebrow({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-export function FoodCard({ item }: { item: MenuItem }) {
+type MenuCardItem = MenuItem & { detail?: PublicMenuItem };
+
+export function FoodCard({ item }: { item: MenuCardItem }) {
   const { add } = useCart();
+  const [detailOpen, setDetailOpen] = useState(false);
   return (
-    <article className="food-card">
+    <>
+    <article className="food-card" onClick={(event) => {
+      if (item.detail && !(event.target instanceof Element && event.target.closest("button, a"))) {
+        setDetailOpen(true);
+      }
+    }}>
       <div className="food-image">
         <Image
           src={item.image}
+          unoptimized={item.status !== undefined}
           alt={item.name}
           fill
           sizes="(max-width: 600px) 100vw, (max-width: 1000px) 50vw, 25vw"
@@ -100,7 +113,11 @@ export function FoodCard({ item }: { item: MenuItem }) {
             ? "STONE-BAKED PIZZA"
             : item.category.toUpperCase()}
         </div>
-        <h3>{item.name}</h3>
+        <h3>{item.detail ? (
+          <button type="button" className={detailStyles.trigger}
+            aria-haspopup="dialog" aria-label={`View details for ${item.name}`}
+            onClick={() => setDetailOpen(true)}>{item.name}</button>
+        ) : item.name}</h3>
         <p>{item.description}</p>
         <div className="food-bottom">
           <strong>
@@ -116,6 +133,10 @@ export function FoodCard({ item }: { item: MenuItem }) {
         </div>
       </div>
     </article>
+    {detailOpen && item.detail && (
+      <MenuItemDialog item={item.detail} onClose={() => setDetailOpen(false)} />
+    )}
+    </>
   );
 }
 export function MenuSection({ full = false }: { full?: boolean }) {
@@ -129,26 +150,105 @@ export function MenuSection({ full = false }: { full?: boolean }) {
     </Suspense>
   );
 }
+// Preserve the existing card's single-price layout using the payable price.
+function toFoodCardItem(item: PublicMenuItem): MenuCardItem {
+  return {
+    id: item.id,
+    name: item.name,
+    description: item.description ?? "",
+    category: item.category?.name ?? "Menu",
+    price: Number(item.discount_price ?? item.price),
+    discount_price: item.discount_price === null ? null : Number(item.discount_price),
+    // A neutral placeholder preserves the image layout without inventing a food photo.
+    image: item.image ?? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3C/svg%3E",
+    status: item.status,
+    detail: item,
+  };
+}
+
 function MenuContent({ full }: { full: boolean }) {
+  const [categories, setCategories] = useState<PublicCategory[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCategories()
+      .then((response) => {
+        if (!cancelled) {
+          setCategories(response.items.filter((item) => item.status === "ACTIVE"));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCategoriesError("Categories are unavailable right now. You can still browse all favorites.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setCategoriesLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   const params = useSearchParams();
   const requested = params.get("category");
   const [chosen, setCategory] = useState<string | null>(null);
-  const category =
-    chosen ||
-    (requested && ["Pizza", "Burgers", "Fast Food"].includes(requested)
-      ? requested
-      : "All");
+  // Preserve existing name-based category links, but store button selections by ID.
+  const requestedCategory = categories.find(
+    (item) => item.id === requested || item.name === requested,
+  );
+  const selectedCategoryId = chosen === "all"
+    ? undefined
+    : chosen ?? requestedCategory?.id;
+  const categoryKey = selectedCategoryId ?? "all";
+  const waitingForCategory = chosen === null && Boolean(requested) && categoriesLoading;
+  const [menuResult, setMenuResult] = useState<{
+    categoryKey: string;
+    items: MenuCardItem[];
+    error: string | null;
+  } | null>(null);
+  const currentResult = !waitingForCategory && menuResult?.categoryKey === categoryKey
+    ? menuResult
+    : null;
+  const menuItems = currentResult?.items ?? [];
+  const loading = currentResult === null;
+  const error = currentResult?.error ?? null;
+
+  useEffect(() => {
+    if (waitingForCategory) return;
+    let cancelled = false;
+    getMenuItems(selectedCategoryId ? { categoryId: selectedCategoryId } : undefined)
+      .then((response) => {
+        if (cancelled) return;
+        setMenuResult({
+          categoryKey,
+          items: response.items
+            .filter((item) => item.status === "AVAILABLE")
+            .map(toFoodCardItem),
+          error: null,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMenuResult({
+            categoryKey,
+            items: [],
+            error: "Our menu is unavailable right now. Please try again later.",
+          });
+        }
+      });
+    return () => { cancelled = true; };
+  }, [selectedCategoryId, categoryKey, waitingForCategory]);
+  const categoryOptions = [
+    { id: "all", name: "All" },
+    ...categories,
+  ];
   const [query, setQuery] = useState("");
-  const filtered = menu.filter(
+  const filtered = menuItems.filter(
     (i) =>
-      (category === "All" || i.category === category) &&
       `${i.name} ${i.description}`.toLowerCase().includes(query.toLowerCase()),
   );
-  const items = full
-    ? filtered
-    : [menu[0], menu[1], menu[5], menu[11]].filter(
-        (i) => category === "All" || i.category === category,
-      );
+  const items = full ? filtered : filtered.slice(0, 4);
   return (
     <section
       className={`section menu-section ${full ? "full-menu" : ""}`}
@@ -178,23 +278,28 @@ function MenuContent({ full }: { full: boolean }) {
           </div>
           <div className="menu-toolbar">
             <div className="category-tabs" aria-label="Menu categories">
-              {["All", "Pizza", "Burgers", "Fast Food"].map((c, i) => (
+              {categoryOptions.map(({ id, name: c }) => (
                 <button
-                  key={c}
-                  onClick={() => setCategory(c)}
-                  className={category === c ? "selected" : ""}
-                  aria-pressed={category === c}
+                  key={id}
+                  onClick={() => {
+                    if (id !== categoryKey) {
+                      setMenuResult(null);
+                      setCategory(id);
+                    }
+                  }}
+                  className={categoryKey === id ? "selected" : ""}
+                  aria-pressed={categoryKey === id}
                 >
-                  {i === 0 ? (
+                  {id === "all" ? (
                     <UtensilsCrossed size={15} />
-                  ) : i === 1 ? (
+                  ) : c === "Pizza" ? (
                     <Flame size={15} />
-                  ) : i === 2 ? (
+                  ) : c === "Burgers" ? (
                     <ChefHat size={15} />
                   ) : (
                     <Heart size={15} />
                   )}{" "}
-                  {c === "All" ? "All favorites" : c}
+                  {id === "all" ? "All favorites" : c}
                 </button>
               ))}
             </div>
@@ -209,6 +314,12 @@ function MenuContent({ full }: { full: boolean }) {
               />
             )}
           </div>
+          {categoriesLoading && (
+            <p className="empty-results" role="status">Loading categories…</p>
+          )}
+          {!categoriesLoading && categoriesError && (
+            <p className="empty-results" role="alert">{categoriesError}</p>
+          )}
         </Reveal>
         <div className="food-grid">
           {items.map((item) => (
@@ -217,14 +328,21 @@ function MenuContent({ full }: { full: boolean }) {
             </Reveal>
           ))}
         </div>
-        {!items.length && (
-          <p className="empty-results">
-            No matches yet. Try a different craving.
+        {loading && (
+          <p className="empty-results" role="status">Loading the good stuff…</p>
+        )}
+        {!loading && error && (
+          <p className="empty-results" role="alert">{error}</p>
+        )}
+        {!loading && !error && !items.length && (
+          <p className="empty-results" role="status">
+            {menuItems.length
+              ? "No matches yet. Try a different craving."
+              : "No menu items are available right now. Please check back soon."}
           </p>
         )}
         <p className="menu-disclaimer">
-          Illustrative menu & prices. Please confirm sizes, availability and
-          final prices when ordering.
+          Please confirm sizes, availability and final prices when ordering.
         </p>
       </div>
     </section>

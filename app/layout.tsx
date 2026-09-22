@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Poppins, Inter } from "next/font/google";
 import { SiteShell } from "@/components/site-shell";
 import "./globals.css";
@@ -46,6 +47,18 @@ export default function RootLayout({
           Skip to content
         </a>
         <SiteShell>{children}</SiteShell>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-Z862QTLYJQ"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-Z862QTLYJQ');
+          `}
+        </Script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

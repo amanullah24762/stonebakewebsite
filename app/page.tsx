@@ -27,7 +27,7 @@ export default function Home() {
         <Image
           className="hero-photo"
           src={photos.hero}
-          alt="Fresh stone-baked pizza topped with melted cheese, herbs and tomatoes"
+          alt="Pizza topped with olives, peppers and onions, with a slice lifted through melted cheese"
           fill
           preload
           sizes="100vw"

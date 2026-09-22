@@ -1,14 +1,16 @@
 export type MenuItem = {
   id: string;
   name: string;
-  category: "Pizza" | "Burgers" | "Fast Food" | "Deals";
+  category: string;
   description: string;
   price: number;
   image: string;
   badge?: string;
+  discount_price?: number | null;
+  status?: "AVAILABLE" | "OUT_OF_STOCK" | "INACTIVE";
 };
 export const photos = {
-  hero: "/images/hero.jpg",
+  hero: "/images/hero-pizza.png",
   pizza: "/images/pizza.jpg",
   fajita: "/images/fajita.jpg",
   cheese: "/images/cheese.jpg",
